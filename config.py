@@ -1,0 +1,10 @@
+# Cores ANSI para o terminal
+RESET = "\033[0m"
+BOLD = "\033[1m"
+GREEN = "\033[32m"
+YELLOW = "\033[33m"
+CYAN = "\033[36m"
+RED = "\033[31m"
+MAGENTA = "\033[35m"
+QUEUE_FILE = "claude_ghost/prompts_queue.json"
+STATE_FILE = "claude_ghost/state.json"
