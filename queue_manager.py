@@ -1,26 +1,42 @@
 import json
 import os
-from .config import QUEUE_FILE, STATE_FILE, GREEN, YELLOW, RED, CYAN, RESET, BOLD
+from .config import QUEUE_FILE, STATE_FILE
+from .logger import log
 
-def load_queue():
-    if not os.path.exists(QUEUE_FILE):
-        return []
+
+def _read(path, default):
+    if not os.path.exists(path):
+        return default
     try:
-        with open(QUEUE_FILE, "r", encoding="utf-8") as f:
+        with open(path, "r", encoding="utf-8") as f:
             return json.load(f)
     except Exception:
-        return []
+        return default
+
+
+def _write(path, data):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=4, ensure_ascii=False)
+    os.replace(tmp, path)
+
+
+def load_queue():
+    q = _read(QUEUE_FILE, [])
+    return q if isinstance(q, list) else []
+
 
 def save_queue(queue):
-    os.makedirs(os.path.dirname(QUEUE_FILE), exist_ok=True)
-    with open(QUEUE_FILE, "w", encoding="utf-8") as f:
-        json.dump(queue, f, indent=4, ensure_ascii=False)
+    _write(QUEUE_FILE, queue)
+
 
 def add_prompt(prompt_text):
     queue = load_queue()
     queue.append(prompt_text)
     save_queue(queue)
-    print(f"{GREEN}[FILA]{RESET} Prompt adicionado com sucesso! Total na fila: {BOLD}{len(queue)}{RESET}")
+    log("FILA", f"Prompt adicionado. Total na fila: {len(queue)}")
+
 
 def get_next_prompt():
     queue = load_queue()
@@ -30,27 +46,22 @@ def get_next_prompt():
         return prompt
     return None
 
+
 def show_queue():
     queue = load_queue()
     if not queue:
-        print(f"{YELLOW}[FILA]{RESET} A fila de prompts está vazia.")
-    else:
-        print(f"\n{CYAN}=== FILA DE PROMPTS PENDENTES ({len(queue)}) ==={RESET}")
-        for idx, p in enumerate(queue, 1):
-            preview = p[:60] + "..." if len(p) > 60 else p
-            print(f" {BOLD}{idx}.{RESET} {preview}")
-        print()
+        log("FILA", "A fila de prompts está vazia.")
+        return
+    log("FILA", f"=== PENDENTES ({len(queue)}) ===")
+    for idx, p in enumerate(queue, 1):
+        preview = p[:60] + "..." if len(p) > 60 else p
+        log("FILA", f"{idx}. {preview}")
+
 
 def load_state():
-    if not os.path.exists(STATE_FILE):
-        return {"active_prompt": None}
-    try:
-        with open(STATE_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception:
-        return {"active_prompt": None}
+    s = _read(STATE_FILE, {"active_prompt": None})
+    return s if isinstance(s, dict) else {"active_prompt": None}
+
 
 def save_state(state):
-    os.makedirs(os.path.dirname(STATE_FILE), exist_ok=True)
-    with open(STATE_FILE, "w", encoding="utf-8") as f:
-        json.dump(state, f, indent=4, ensure_ascii=False)
+    _write(STATE_FILE, state)

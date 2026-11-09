@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+claude_ghost/state.json
+claude_ghost/prompts_queue.json
+claude_ghost/*.tmp
+.idea/
+.vscode/
